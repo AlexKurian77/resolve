@@ -75,8 +75,8 @@ class ApiService {
     }
   }
 
-  async upvotePost(threadId, postId) {
-    return this._postRequest('/api/community/threads/upvote', { threadId, postId });
+  async upvotePost(threadId, postId, userId) {
+    return this._postRequest('/api/community/threads/upvote', { threadId, postId, userId });
   }
 
   async addPost(threadId, post) {

@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   ScrollView,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
+  RefreshControl,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
@@ -27,40 +28,51 @@ export default function CommunityScreen({ navigation }) {
     {
       id: 'relapse',
       title: 'Relapse Stories',
-      posts: [
-        {
-          id: 'p1',
-          text: 'Had a setback last week, getting back up.',
-          upvotes: 5,
-          replies: [{ id: 'r1', text: 'Proud of you for trying again!' }],
-        },
-      ],
+      posts: [],
     },
     {
       id: 'motivation',
       title: 'Motivation',
-      posts: [
-        {
-          id: 'p2',
-          text: 'Day 14 — feeling clearer than ever.',
-          upvotes: 12,
-          replies: [],
-        },
-      ],
+      posts: [],
     },
     {
       id: 'tips',
       title: 'Tips',
-      posts: [
-        {
-          id: 'p3',
-          text: 'Cold showers + walk outside helped me.',
-          upvotes: 8,
-          replies: [],
-        },
-      ],
+      posts: [],
     },
   ]);
+  
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchThreads = async () => {
+    try {
+      const threadIds = ['relapse', 'motivation', 'tips'];
+      const updatedThreads = [...threads];
+      for (const id of threadIds) {
+        const threadRef = doc(db, 'threads', id);
+        const threadSnap = await getDoc(threadRef);
+        if (threadSnap.exists()) {
+          const index = updatedThreads.findIndex(t => t.id === id);
+          if (index !== -1) {
+            updatedThreads[index] = { ...updatedThreads[index], posts: threadSnap.data().posts || [] };
+          }
+        }
+      }
+      setThreads(updatedThreads);
+    } catch (error) {
+      console.error('Error fetching threads:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchThreads();
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchThreads();
+    setRefreshing(false);
+  }, [threads]);
   const [newPost, setNewPost] = useState('');
   const [activeThreadId, setActiveThreadId] = useState('relapse');
   const [replyDrafts, setReplyDrafts] = useState({});
@@ -101,15 +113,23 @@ export default function CommunityScreen({ navigation }) {
           t.id === activeThreadId
             ? {
                 ...t,
-                posts: t.posts.map(p =>
-                  p.id === postId ? { ...p, upvotes: p.upvotes + 1 } : p,
-                ),
+                posts: t.posts.map(p => {
+                  if (p.id === postId) {
+                    const upvotedBy = p.upvotedBy || [];
+                    const hasVoted = upvotedBy.includes(user.uid);
+                    const newUpvotedBy = hasVoted
+                      ? upvotedBy.filter(id => id !== user.uid)
+                      : [...upvotedBy, user.uid];
+                    return { ...p, upvotedBy: newUpvotedBy, upvotes: p.upvotes + (hasVoted ? -1 : 1) };
+                  }
+                  return p;
+                }),
               }
             : t,
         ),
       );
       // API Call
-      await apiService.upvotePost(activeThreadId, postId);
+      await apiService.upvotePost(activeThreadId, postId, user.uid);
     } catch (e) {
       console.error(e);
       // Rollback on failure could be implemented here
@@ -125,6 +145,7 @@ export default function CommunityScreen({ navigation }) {
         id: `p${Date.now()}`,
         text: newPost.trim(),
         upvotes: 0,
+        upvotedBy: [],
         replies: [],
         userId: user.uid,
       };
@@ -242,17 +263,20 @@ export default function CommunityScreen({ navigation }) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Community & Support</Text>
+        <Text style={styles.headerTitle}>Community</Text>
         <Text style={styles.headerSubtitle}>
-          Connect, share & heal together
+          Connect, share, and support each other
         </Text>
       </View>
 
       <ScrollView
-        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+        }
       >
-        {/* Anonymous Forum */}
+        {/* Forum Section */}
         <View style={styles.sectionCard}>
           <View style={styles.forumHeader}>
             <View style={styles.forumTitleRow}>
@@ -333,18 +357,28 @@ export default function CommunityScreen({ navigation }) {
                   <MaterialCommunityIcons
                     name="arrow-up-bold-outline"
                     size={16}
-                    color={p.upvotes > 0 ? colors.warning : colors.textMuted}
+                    color={
+                      p.upvotedBy?.includes(auth.currentUser?.uid)
+                        ? colors.success
+                        : p.upvotes > 0
+                        ? colors.warning
+                        : colors.textMuted
+                    }
                   />
                   <Text
                     style={[
                       styles.upvoteCount,
                       {
                         color:
-                          p.upvotes > 0 ? colors.warning : colors.textMuted,
+                          p.upvotedBy?.includes(auth.currentUser?.uid)
+                            ? colors.success
+                            : p.upvotes > 0
+                            ? colors.warning
+                            : colors.textMuted,
                       },
                     ]}
                   >
-                    {p.upvotes}
+                    {p.upvotedBy ? p.upvotedBy.length : p.upvotes}
                   </Text>
                 </TouchableOpacity>
               </View>

@@ -300,8 +300,9 @@ def upvote_post():
     data = request.json
     thread_id = data.get("threadId")
     post_id = data.get("postId")
+    user_id = data.get("userId")
     
-    if not db or not thread_id or not post_id:
+    if not db or not thread_id or not post_id or not user_id:
         return jsonify({"error": "Missing parameters or DB not initialized"}), 400
         
     try:
@@ -312,7 +313,13 @@ def upvote_post():
             updated_posts = []
             for p in thread_data.get('posts', []):
                 if p.get('id') == post_id:
-                    p['upvotes'] = p.get('upvotes', 0) + 1
+                    upvoted_by = p.get('upvotedBy', [])
+                    if user_id in upvoted_by:
+                        upvoted_by.remove(user_id)
+                    else:
+                        upvoted_by.append(user_id)
+                    p['upvotedBy'] = upvoted_by
+                    p['upvotes'] = len(upvoted_by) # Maintain backward compatibility for upvotes field
                 updated_posts.append(p)
             thread_ref.update({'posts': updated_posts})
             return jsonify({"success": True})
@@ -332,7 +339,7 @@ def add_post():
     try:
         new_post['createdAt'] = firestore.SERVER_TIMESTAMP
         thread_ref = db.collection('threads').document(thread_id)
-        thread_ref.update({'posts': firestore.ArrayUnion([new_post])})
+        thread_ref.set({'posts': firestore.ArrayUnion([new_post])}, merge=True)
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
