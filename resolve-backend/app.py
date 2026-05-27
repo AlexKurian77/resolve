@@ -14,7 +14,7 @@ load_dotenv()
 # --- Firebase Initialization ---
 try:
     # Use environment variable for the key path; default to local development name
-    firebase_key_path = os.getenv("FIREBASE_KEY_PATH", "firebase_key_new.json")
+    firebase_key_path = os.getenv("FIREBASE_KEY_PATH", "firebase_key.json")
     cred = credentials.Certificate(firebase_key_path)
     firebase_admin.initialize_app(cred)
     db = firestore.client()
