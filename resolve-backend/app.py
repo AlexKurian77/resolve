@@ -290,6 +290,113 @@ def chat():
     return jsonify({"response": bot_reply})
 
 
+# --- Community APIs ---
+
+@app.route("/api/community/threads/upvote", methods=["POST"])
+def upvote_post():
+    data = request.json
+    thread_id = data.get("threadId")
+    post_id = data.get("postId")
+    
+    if not db or not thread_id or not post_id:
+        return jsonify({"error": "Missing parameters or DB not initialized"}), 400
+        
+    try:
+        thread_ref = db.collection('threads').document(thread_id)
+        doc = thread_ref.get()
+        if doc.exists:
+            thread_data = doc.to_dict()
+            updated_posts = []
+            for p in thread_data.get('posts', []):
+                if p.get('id') == post_id:
+                    p['upvotes'] = p.get('upvotes', 0) + 1
+                updated_posts.append(p)
+            thread_ref.update({'posts': updated_posts})
+            return jsonify({"success": True})
+        return jsonify({"error": "Thread not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/community/threads/post", methods=["POST"])
+def add_post():
+    data = request.json
+    thread_id = data.get("threadId")
+    new_post = data.get("post") # dict containing id, text, upvotes, replies, userId
+    
+    if not db or not thread_id or not new_post:
+        return jsonify({"error": "Missing parameters or DB not initialized"}), 400
+        
+    try:
+        new_post['createdAt'] = firestore.SERVER_TIMESTAMP
+        thread_ref = db.collection('threads').document(thread_id)
+        thread_ref.update({'posts': firestore.ArrayUnion([new_post])})
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/community/threads/reply", methods=["POST"])
+def add_reply():
+    data = request.json
+    thread_id = data.get("threadId")
+    post_id = data.get("postId")
+    reply = data.get("reply") # dict containing id, text, userId
+    
+    if not db or not thread_id or not post_id or not reply:
+        return jsonify({"error": "Missing parameters or DB not initialized"}), 400
+        
+    try:
+        thread_ref = db.collection('threads').document(thread_id)
+        doc = thread_ref.get()
+        if doc.exists:
+            thread_data = doc.to_dict()
+            updated_posts = []
+            for p in thread_data.get('posts', []):
+                if p.get('id') == post_id:
+                    replies = p.get('replies', [])
+                    replies.append(reply)
+                    p['replies'] = replies
+                updated_posts.append(p)
+            thread_ref.update({'posts': updated_posts})
+            return jsonify({"success": True})
+        return jsonify({"error": "Thread not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/community/sessions/join", methods=["POST"])
+def join_session():
+    data = request.json
+    session_id = data.get("sessionId")
+    user_id = data.get("userId")
+    
+    if not db or not session_id or not user_id:
+        return jsonify({"error": "Missing parameters or DB not initialized"}), 400
+        
+    try:
+        session_ref = db.collection('sessions').document(session_id)
+        session_ref.set({'participants': firestore.ArrayUnion([user_id])}, merge=True)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/community/chats/message", methods=["POST"])
+def send_message():
+    data = request.json
+    chat_id = data.get("chatId")
+    message = data.get("message") # dict containing id, text, fromMe, fromUserId, toUserId
+    
+    if not db or not chat_id or not message:
+        return jsonify({"error": "Missing parameters or DB not initialized"}), 400
+        
+    try:
+        message['timestamp'] = firestore.SERVER_TIMESTAMP
+        chat_ref = db.collection('chats').document(chat_id)
+        chat_ref.set({'messages': firestore.ArrayUnion([message])}, merge=True)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
 if __name__ == "__main__":
     # Binding to 0.0.0.0 allows devices on your local network (like your phone) to connect.
     app.run(host="0.0.0.0", port=5000, debug=False)

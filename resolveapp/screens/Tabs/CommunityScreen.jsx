@@ -20,6 +20,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../firebaseConfig';
 import { colors, spacing, radius } from '../../utils/theme';
+import { apiService } from '../../utils/apiService';
 
 export default function CommunityScreen({ navigation }) {
   const [threads, setThreads] = useState([
@@ -94,22 +95,24 @@ export default function CommunityScreen({ navigation }) {
     const user = auth.currentUser;
     if (!user) return;
     try {
-      const threadRef = doc(db, 'threads', activeThreadId);
-      const threadSnap = await getDoc(threadRef);
-      if (threadSnap.exists()) {
-        const threadData = threadSnap.data();
-        const updatedPosts = threadData.posts.map(p =>
-          p.id === postId ? { ...p, upvotes: p.upvotes + 1 } : p,
-        );
-        await setDoc(threadRef, { posts: updatedPosts }, { merge: true });
-        setThreads(prev =>
-          prev.map(t =>
-            t.id === activeThreadId ? { ...t, posts: updatedPosts } : t,
-          ),
-        );
-      }
+      // Optimistic UI update
+      setThreads(prev =>
+        prev.map(t =>
+          t.id === activeThreadId
+            ? {
+                ...t,
+                posts: t.posts.map(p =>
+                  p.id === postId ? { ...p, upvotes: p.upvotes + 1 } : p,
+                ),
+              }
+            : t,
+        ),
+      );
+      // API Call
+      await apiService.upvotePost(activeThreadId, postId);
     } catch (e) {
       console.error(e);
+      // Rollback on failure could be implemented here
     }
   };
 
@@ -118,20 +121,15 @@ export default function CommunityScreen({ navigation }) {
     const user = auth.currentUser;
     if (!user) return;
     try {
-      const threadRef = doc(db, 'threads', activeThreadId);
       const newPostData = {
         id: `p${Date.now()}`,
         text: newPost.trim(),
         upvotes: 0,
         replies: [],
-        createdAt: serverTimestamp(),
         userId: user.uid,
       };
-      await setDoc(
-        threadRef,
-        { posts: arrayUnion(newPostData) },
-        { merge: true },
-      );
+      
+      // Optimistic UI update
       setThreads(prev =>
         prev.map(t =>
           t.id === activeThreadId
@@ -140,6 +138,9 @@ export default function CommunityScreen({ navigation }) {
         ),
       );
       setNewPost('');
+
+      // API Call
+      await apiService.addPost(activeThreadId, newPostData);
     } catch (e) {
       console.error(e);
     }
@@ -151,29 +152,27 @@ export default function CommunityScreen({ navigation }) {
     const user = auth.currentUser;
     if (!user) return;
     try {
-      const threadRef = doc(db, 'threads', activeThreadId);
-      const threadSnap = await getDoc(threadRef);
-      if (threadSnap.exists()) {
-        const threadData = threadSnap.data();
-        const updatedPosts = threadData.posts.map(p =>
-          p.id === postId
+      const replyData = { id: `r${Date.now()}`, text, userId: user.uid };
+      
+      // Optimistic UI Update
+      setThreads(prev =>
+        prev.map(t =>
+          t.id === activeThreadId
             ? {
-                ...p,
-                replies: [
-                  ...p.replies,
-                  { id: `r${Date.now()}`, text, userId: user.uid },
-                ],
+                ...t,
+                posts: t.posts.map(p =>
+                  p.id === postId
+                    ? { ...p, replies: [...p.replies, replyData] }
+                    : p,
+                ),
               }
-            : p,
-        );
-        await setDoc(threadRef, { posts: updatedPosts }, { merge: true });
-        setThreads(prev =>
-          prev.map(t =>
-            t.id === activeThreadId ? { ...t, posts: updatedPosts } : t,
-          ),
-        );
-        setReplyDrafts(d => ({ ...d, [postId]: '' }));
-      }
+            : t,
+        ),
+      );
+      setReplyDrafts(d => ({ ...d, [postId]: '' }));
+
+      // API Call
+      await apiService.addReply(activeThreadId, postId, replyData);
     } catch (e) {
       console.error(e);
     }
@@ -184,12 +183,7 @@ export default function CommunityScreen({ navigation }) {
     const user = auth.currentUser;
     if (!user) return;
     try {
-      const sessionRef = doc(db, 'sessions', id);
-      await setDoc(
-        sessionRef,
-        { participants: arrayUnion(user.uid) },
-        { merge: true },
-      );
+      await apiService.joinSession(id, user.uid);
     } catch (e) {
       console.error(e);
     }
@@ -227,18 +221,18 @@ export default function CommunityScreen({ navigation }) {
         id: `m${Date.now()}`,
         text: messageDraft.trim(),
         fromMe: true,
-        timestamp: serverTimestamp(),
         fromUserId: user.uid,
         toUserId: connectedCode,
       };
-      const chatRef = doc(db, 'chats', `${user.uid}_${connectedCode}`);
-      await setDoc(
-        chatRef,
-        { messages: arrayUnion(messageData) },
-        { merge: true },
-      );
+      
+      const chatId = `${user.uid}_${connectedCode}`;
+      
+      // Optimistic UI update
       setMessages(m => [...m, messageData]);
       setMessageDraft('');
+
+      // API Call
+      await apiService.sendChatMessage(chatId, messageData);
     } catch (e) {
       console.error(e);
     }
