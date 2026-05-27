@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resolve Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        #chat-container {
+            width: 100%;
+            max-width: 768px;
+            height: 85vh;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: #fcfcfc;
+        }
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #10b981; /* Emerald 500 */
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .bot-message {
+            align-self: flex-start;
+            background-color: #e5e7eb; /* Gray 200 */
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
+        }
+        /* Custom formatting for assessment analysis */
+        .bot-message h3 {
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            color: #065f46;
+        }
+        .bot-message * {
+            margin: 0;
+            padding: 0;
+        }
+        .bot-message p, .bot-message ul {
+            margin-top: 5px;
+            margin-bottom: 5px;
+            padding-left: 20px;
+        }
+        .bot-message li {
+            margin-bottom: 5px;
+        }
+        
+        /* New Styles for Slideshow Assessment */
+        #assessment-container {
+            padding: 20px;
+            background-color: #f0fdf4; /* Light Green */
+            border-radius: 12px;
+            border: 2px solid #a7f3d0; /* Emerald 200 */
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .option-button {
+            transition: all 0.15s ease-in-out;
+        }
+        .option-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+        }
+        .assessment-header {
+            width: 100%;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #d1fae5;
+        }
+        /* Hide user input/send during assessment */
+        .input-hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="chat-container">
+        <header class="p-4 bg-emerald-600 text-white shadow-lg">
+            <h1 class="text-xl font-bold">Resolve Assistant</h1>
+            <p class="text-sm opacity-80">Your compassionate guide to recovery.</p>
+        </header>
+
+        <div id="chat-messages">
+            <div class="bot-message">
+                Hello! I'm here to support you on your journey. Please choose one of the options below to get started, or simply type your message.
+            </div>
+
+            <div id="initial-menu" class="w-full flex flex-col gap-3 p-4 bg-white rounded-lg shadow-inner border border-gray-100">
+                <button onclick="handleMenuSelection('SHARE_PROGRESS')" class="menu-button bg-sky-500 text-white font-semibold py-3 px-4 rounded-xl shadow-sky-700/50">
+                    🗣️ Want to share something
+                </button>
+                <button onclick="handleMenuSelection('START_PDI_ASSESSMENT')" class="menu-button bg-emerald-500 text-white font-semibold py-3 px-4 rounded-xl">
+                    🧠 Need analysis of your current situation
+                </button>
+                <button onclick="handleMenuSelection('FEELING_URGES')" class="menu-button bg-rose-500 text-white font-semibold py-3 px-4 rounded-xl shadow-rose-700/50">
+                    🚨 Having strong urges talk with me
+                </button>
+            </div>
+            
+            <div id="assessment-container" class="w-full">
+                <div class="assessment-header">
+                    <h2 id="question-header" class="text-lg font-bold text-emerald-700">Question 1/8</h2>
+                </div>
+                <p id="question-text" class="text-center text-gray-700 font-medium"></p>
+                <div id="options-box" class="flex justify-around w-full mt-4">
+                    </div>
+                <div class="w-full text-center text-sm text-gray-500 mt-2">
+                    <span id="low-label" class="float-left ml-4 font-semibold text-red-500">Low/Poor</span>
+                    <span id="high-label" class="float-right mr-4 font-semibold text-green-500">High/Excellent</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="main-input-area" class="message-input">
+            <input type="text" id="user-input" placeholder="Type your message here..."
+                    class="flex-grow p-3 border border-gray-300 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <button onclick="sendMessage()" id="send-button"
+                    class="bg-emerald-600 text-white p-3 rounded-r-xl font-semibold hover:bg-emerald-700 transition duration-150">
+                Send
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const initialMenu = document.getElementById('initial-menu');
+        const sendButton = document.getElementById('send-button');
+        const mainInputArea = document.getElementById('main-input-area'); // New reference
+        const assessmentContainer = document.getElementById('assessment-container');
+        const questionHeader = document.getElementById('question-header');
+        const questionText = document.getElementById('question-text');
+        const optionsBox = document.getElementById('options-box');
+        const lowLabel = document.getElementById('low-label');
+        const highLabel = document.getElementById('high-label');
+
+
+        // --- PDI ASSESSMENT STATE AND DATA ---
+        let isPdiActive = false; 
+        let currentPdiStep = 0; 
+        let pdiScores = [];
+        
+        // Structure: [Question Text, Low Label, High Label]
+        const pdiQuestions = [
+            ["How often have you felt in control of your urges in the last week?", "Not at all", "Completely"],
+            ["How motivated are you to stick to your recovery plan today?", "Not at all", "Extremely"],
+            ["How much stress have you experienced today?", "Low stress", "High stress"],
+            ["How would you rate your mood today?", "Very low", "Very high"],
+            ["How clear is your mind right now?", "Very foggy", "Crystal clear"],
+            ["How satisfied are you with your support system right now?", "Not at all", "Very satisfied"],
+            ["How well did you sleep last night?", "Very poorly", "Very well"],
+            ["How tempted were you to engage in old patterns today?", "Not at all", "Extremely tempted"]
+        ];
+        const maxScore = pdiQuestions.length * 5; // 8 * 5 = 40
+
+        // --- UTILITY FUNCTIONS ---
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !isPdiActive) {
+                sendMessage();
+            }
+        });
+
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function appendMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+            messageDiv.innerHTML = text.replace(/\n/g, '<br>'); 
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function enableChatInput() {
+            mainInputArea.classList.remove('input-hidden');
+            userInput.disabled = false;
+            sendButton.disabled = false;
+            userInput.focus();
+        }
+
+        function disableChatInput() {
+            userInput.disabled = true;
+            sendButton.disabled = true;
+        }
+
+        // --- PDI ASSESSMENT SLIDESHOW FUNCTIONS ---
+
+        function startPdiAssessment() {
+            isPdiActive = true;
+            currentPdiStep = 0;
+            pdiScores = [];
+            disableChatInput();
+            mainInputArea.classList.add('input-hidden'); // Hides the input bar
+            
+            const intro = `Great! Let's analyze your current situation with a quick **8-question assessment**. Please select a score from **1 to 5** for each question using the buttons below.`;
+            appendMessage(intro, 'bot');
+            
+            // Show the assessment container and load the first question
+            setTimeout(() => {
+                assessmentContainer.style.display = 'flex';
+                loadQuestion(currentPdiStep);
+                scrollToBottom();
+            }, 500);
+        }
+
+        function loadQuestion(step) {
+            const [qText, low, high] = pdiQuestions[step];
+            
+            questionHeader.textContent = `Question ${step + 1}/${pdiQuestions.length}`;
+            questionText.textContent = qText;
+            lowLabel.textContent = low;
+            highLabel.textContent = high;
+            optionsBox.innerHTML = '';
+
+            for (let score = 1; score <= 5; score++) {
+                const button = document.createElement('button');
+                button.textContent = score;
+                button.classList.add('option-button', 'bg-emerald-500', 'text-white', 'font-bold', 'w-10', 'h-10', 'rounded-full', 'shadow-md', 'hover:bg-emerald-600');
+                button.onclick = () => processPdiResponse(score);
+                optionsBox.appendChild(button);
+            }
+        }
+
+        function processPdiResponse(score) {
+            // *** CRITICAL CHANGE: DO NOT APPEND USER SCORE TO CHAT HISTORY ***
+            pdiScores.push(score);
+            // End of critical change
+
+            // Move to the next step
+            currentPdiStep++;
+
+            if (currentPdiStep < pdiQuestions.length) {
+                // Load next question
+                setTimeout(() => {
+                    loadQuestion(currentPdiStep);
+                    scrollToBottom();
+                }, 100); // Quick transition
+            } else {
+                // Assessment complete
+                assessmentContainer.style.display = 'none'; // Hide slideshow
+                isPdiActive = false; // Reset state
+                generatePdiAnalysis();
+            }
+        }
+        
+        function generatePdiAnalysis() {
+            const totalScore = pdiScores.reduce((a, b) => a + b, 0);
+            
+            let analysisHeader = "";
+            let summary = "";
+            let recommendation = "";
+            
+            // Scoring logic
+            if (totalScore >= 32) { // 80% or higher
+                analysisHeader = "Your Current State: **Strong & Stable!** 💪";
+                summary = `You've demonstrated **excellent resilience and stability** across key recovery areas, scoring a total of **${totalScore} out of ${maxScore}**. Your control, motivation, and support systems appear to be very strong. This is a fantastic sign of progress!`;
+                recommendation = `
+                    <h3>Next Steps: Sustain & Grow 🌱</h3>
+                    <ul>
+                        <li>**Celebrate your success!** Acknowledge the hard work that got you here.</li>
+                        <li>**Proactive Maintenance:** Don't get complacent. Focus on maintaining your routines and connections.</li>
+                        <li>**Challenge Yourself:** Think about setting a new, positive, non-recovery-related goal (e.g., a hobby, a fitness goal).</li>
+                    </ul>
+                `;
+            } else if (totalScore >= 24) { // 60% to 79%
+                analysisHeader = "Your Current State: **Steady Progress** 👍";
+                summary = `You're in a solid position, scoring **${totalScore} out of ${maxScore}**. While many areas are stable, there might be a few weak spots (like stress, sleep, or a specific urge) that require attention. You're doing well, but consistency is key.`;
+                recommendation = `
+                    <h3>Next Steps: Focus & Consistency 🔍</h3>
+                    <ul>
+                        <li>**Identify Hot Spots:** Review your scores and brainstorm specific actions to address them.</li>
+                        <li>**Reinforce Coping Skills:** Practice a grounding or relaxation technique for at least 5 minutes daily.</li>
+                        <li>**Reach Out:** Connect with your sponsor, therapist, or support group member this week.</li>
+                    </ul>
+                `;
+            } else { // Below 60%
+                analysisHeader = "Your Current State: **High Risk, Immediate Focus Needed** ⚠️";
+                summary = `Your total score is **${totalScore} out of ${maxScore}**. This indicates several areas of vulnerability, with low control, high stress/temptation, or poor support/sleep. It's crucial to acknowledge this and **prioritize your recovery right now**.`;
+                recommendation = `
+                    <h3>Next Steps: Stabilize & Seek Support 🆘</h3>
+                    <ul>
+                        <li>**Safety First:** Immediately implement your relapse prevention plan.</li>
+                        <li>**Connect:** Talk to a trusted person (sponsor, therapist, friend) *now*. Don't wait.</li>
+                        <li>**Reduce Stressors:** Cancel non-essential activities for the next 24 hours to focus on self-care and stability.</li>
+                    </ul>
+                `;
+            }
+
+            // Construct the final bot response
+            const finalResponse = `
+                <h2>PDI Assessment Complete</h2>
+                <p>${analysisHeader}</p>
+                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ccc;">
+                
+                <h3>Summary of Results</h3>
+                <p>${summary}</p>
+                
+                ${recommendation}
+
+                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ccc;">
+                <p>What would you like to do next? You can ask me to elaborate on one of the recommendations or choose an option from the menu.</p>
+            `;
+
+            appendMessage(finalResponse, 'bot');
+            initialMenu.style.display = 'flex'; // Show the menu again
+            enableChatInput(); // Re-enable chat input
+        }
+
+        // --- CHAT INTERFACE FUNCTIONS ---
+
+        function handleMenuSelection(command) {
+            disableChatInput();
+            initialMenu.style.display = 'none';
+            
+            let displayMessage = '';
+            
+            if (command === 'START_PDI_ASSESSMENT') {
+                displayMessage = 'I need analysis of my current situation.';
+                appendMessage(displayMessage, 'user');
+                startPdiAssessment();
+                return; 
+            } else if (command === 'SHARE_PROGRESS') {
+                displayMessage = 'I want to share something.';
+            } else if (command === 'FEELING_URGES') {
+                displayMessage = 'I am having strong urges and want to talk.';
+            }
+
+            appendMessage(displayMessage, 'user');
+            
+            // Simulated backend response for other options
+            setTimeout(() => {
+                if (command === 'SHARE_PROGRESS') {
+                    appendMessage("That's wonderful! I'd love to hear about it. Tell me what's been going well for you.", 'bot');
+                } else if (command === 'FEELING_URGES') {
+                    appendMessage("Thank you for reaching out. That takes courage. Remember the 'HALT' check: Are you **H**ungry, **A**ngry, **L**onely, or **T**ired? Tell me which one you are feeling most right now, and we'll work through it.", 'bot');
+                }
+                enableChatInput();
+            }, 500);
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (message === '' || isPdiActive) return;
+
+            userInput.value = '';
+            appendMessage(message, 'user');
+            
+            disableChatInput();
+
+            // General conversation (simulated)
+            setTimeout(() => {
+                appendMessage(`Thank you for sharing: "${message}". I hear you. (Since this is a simulated chat, I'm returning to the main menu.)`, 'bot');
+                initialMenu.style.display = 'flex';
+                enableChatInput();
+            }, 1000);
+        }
+        
+        // Initial setup on load
+        window.onload = () => {
+             userInput.focus();
+        };
+
+    </script>
+</body>
+</html>

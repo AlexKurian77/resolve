@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Secrets
+firebase_key*.json
+google-services.json
+GoogleService-Info.plist
+chatbot_firebase_key_new.json
