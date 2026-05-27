@@ -337,7 +337,7 @@ def add_post():
         return jsonify({"error": "Missing parameters or DB not initialized"}), 400
         
     try:
-        new_post['createdAt'] = firestore.SERVER_TIMESTAMP
+        new_post['createdAt'] = int(time.time() * 1000)
         thread_ref = db.collection('threads').document(thread_id)
         thread_ref.set({'posts': firestore.ArrayUnion([new_post])}, merge=True)
         return jsonify({"success": True})
@@ -398,7 +398,7 @@ def send_message():
         return jsonify({"error": "Missing parameters or DB not initialized"}), 400
         
     try:
-        message['timestamp'] = firestore.SERVER_TIMESTAMP
+        message['timestamp'] = int(time.time() * 1000)
         chat_ref = db.collection('chats').document(chat_id)
         chat_ref.set({'messages': firestore.ArrayUnion([message])}, merge=True)
         return jsonify({"success": True})
