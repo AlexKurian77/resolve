@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 import logo from './assets/resolve.png';
 
 function App() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   useEffect(() => {
     // Add title
     document.title = "Resolve - Take Control of Your Focus";
@@ -17,11 +19,29 @@ function App() {
             <img src={logo} alt="Resolve Logo" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
             Resolve
           </div>
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-            <a href="#features" className="text-muted" style={{ fontWeight: 500 }}>Features</a>
-            <a href="#install" className="text-muted" style={{ fontWeight: 500 }}>How to Install</a>
-            <a href="#install" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '14px' }}>Download</a>
+          <div className="nav-links" style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+            <a href="#features" className="text-muted nav-item" style={{ fontWeight: 500 }}>Features</a>
+            <a href="#install" className="text-muted nav-item" style={{ fontWeight: 500 }}>How to Install</a>
+            <a href="#install" className="btn btn-primary nav-btn" style={{ padding: '8px 16px', fontSize: '14px' }}>Download</a>
           </div>
+
+          {/* Hamburger Menu Button */}
+          <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {isMobileMenuOpen ? (
+                <><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></>
+              ) : (
+                <><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></>
+              )}
+            </svg>
+          </button>
+        </div>
+
+        {/* Mobile Dropdown Menu */}
+        <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+          <a href="#features" className="text-muted" style={{ fontWeight: 500, fontSize: '18px' }} onClick={() => setIsMobileMenuOpen(false)}>Features</a>
+          <a href="#install" className="text-muted" style={{ fontWeight: 500, fontSize: '18px' }} onClick={() => setIsMobileMenuOpen(false)}>How to Install</a>
+          <a href="#install" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>Download App</a>
         </div>
       </nav>
 
@@ -38,13 +58,13 @@ function App() {
             </svg>
             Now available for Android
           </div>
-          <h1 style={{ fontSize: '72px', letterSpacing: '-0.02em', marginBottom: '24px' }} className="gradient-text">
+          <h1 className="gradient-text hero-title" style={{ letterSpacing: '-0.02em', marginBottom: '24px' }}>
             Take Control of <br/> Your <span className="gradient-text-accent">Focus</span>
           </h1>
-          <p className="text-muted animate-fade-in delay-1" style={{ fontSize: '20px', maxWidth: '600px', margin: '0 auto 40px auto' }}>
+          <p className="text-muted animate-fade-in delay-1 hero-subtitle" style={{ maxWidth: '600px', margin: '0 auto 40px auto' }}>
             Break free from distractions with Lockdown Mode, connect with the community, and reclaim your digital wellbeing.
           </p>
-          <div className="animate-fade-in delay-2" style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+          <div className="animate-fade-in delay-2 hero-buttons" style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
             <a href="#install" className="btn btn-primary" style={{ animation: 'pulse-glow 2s infinite' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               Download APK
@@ -56,7 +76,7 @@ function App() {
           
           {/* Mockup visual */}
           <div className="animate-fade-in delay-3">
-             <div className="animate-float" style={{ marginTop: '80px', position: 'relative', marginInline: 'auto', width: '100%', maxWidth: '800px', height: '400px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', borderBottom: 'none', overflow: 'hidden', boxShadow: '0 -20px 40px rgba(0,0,0,0.5)' }}>
+             <div className="animate-float mockup-visual" style={{ position: 'relative', marginInline: 'auto', width: '100%', maxWidth: '800px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', borderBottom: 'none', overflow: 'hidden', boxShadow: '0 -20px 40px rgba(0,0,0,0.5)' }}>
                 <div style={{ display: 'flex', gap: '8px', padding: '16px 24px', borderBottom: '1px solid var(--border-color)', background: 'var(--surface-alt)' }}>
                    <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: 'var(--border-color)' }}></div>
                    <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: 'var(--border-color)' }}></div>
@@ -64,7 +84,7 @@ function App() {
                 </div>
                 <div style={{ display: 'flex', height: '100%' }}>
                    {/* Mock sidebar */}
-                   <div style={{ width: '25%', borderRight: '1px solid var(--border-color)', padding: '24px' }}>
+                <div className="mockup-sidebar" style={{ borderRight: '1px solid var(--border-color)', padding: '24px' }}>
                       <div style={{ height: 20, width: '80%', background: 'var(--border-color)', borderRadius: 4, marginBottom: 24 }}></div>
                       <div style={{ height: 12, width: '100%', background: 'var(--surface-alt)', borderRadius: 4, marginBottom: 12 }}></div>
                       <div style={{ height: 12, width: '60%', background: 'var(--surface-alt)', borderRadius: 4, marginBottom: 12 }}></div>
@@ -92,7 +112,7 @@ function App() {
             <p className="text-muted" style={{ fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>Everything you need to minimize distractions and maximize your productive hours.</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+          <div className="features-grid">
             {/* Feature 1 */}
             <div className="glass-card animate-fade-in delay-1">
               <div style={{ width: '48px', height: '48px', backgroundColor: 'var(--accent-soft)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }} className="text-accent">
@@ -126,7 +146,7 @@ function App() {
       {/* Installation Section */}
       <section id="install" className="section" style={{ borderTop: '1px solid var(--border-color)' }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '60px', alignItems: 'center' }}>
+          <div className="install-grid" style={{ display: 'grid', gap: '60px', alignItems: 'center' }}>
             <div>
               <div style={{ display: 'inline-block', padding: '6px 16px', backgroundColor: 'var(--accent-soft)', borderRadius: '20px', marginBottom: '24px', fontSize: '14px', fontWeight: 500 }} className="text-accent">
                 Getting Started
@@ -168,7 +188,7 @@ function App() {
               </a>
             </div>
             
-            <div className="glass-card" style={{ padding: '0', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '400px', background: 'linear-gradient(135deg, var(--surface-alt) 0%, var(--bg-color) 100%)' }}>
+            <div className="glass-card install-visual" style={{ padding: '0', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: 'linear-gradient(135deg, var(--surface-alt) 0%, var(--bg-color) 100%)' }}>
                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                </svg>

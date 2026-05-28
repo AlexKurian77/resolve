@@ -98,6 +98,11 @@ a:hover {
 }
 
 /* Utilities */
+.app-container {
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
 .text-accent {
   color: var(--accent-color);
 }
@@ -115,6 +120,42 @@ a:hover {
 }
 .section {
   padding: 100px 0;
+}
+
+/* Mobile Menu Styles */
+.mobile-menu-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 4px;
+}
+.mobile-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(15, 15, 15, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 24px;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+}
+.mobile-menu.open {
+  display: flex;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* Grids */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
 }
 
 /* Gradient text */
@@ -172,4 +213,68 @@ a:hover {
 .btn-outline:hover {
   background-color: var(--surface-alt);
   border-color: var(--text-muted);
+}
+
+/* Responsive Component Classes */
+.hero-title {
+  font-size: 72px;
+}
+.hero-subtitle {
+  font-size: 20px;
+}
+.mockup-visual {
+  height: 400px;
+  margin-top: 80px;
+}
+.install-visual {
+  min-height: 400px;
+}
+.install-grid {
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 42px;
+  }
+  .hero-subtitle {
+    font-size: 16px;
+  }
+  .section {
+    padding: 60px 0;
+  }
+  .btn {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+  .nav-links {
+    display: none !important;
+  }
+  .hero-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  .hero-buttons .btn {
+    width: 100%;
+  }
+  .mockup-visual {
+    height: 300px;
+    margin-top: 40px;
+  }
+  .mockup-sidebar {
+    display: none !important;
+  }
+  .install-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .install-visual {
+    min-height: 250px;
+  }
+  .mobile-menu-btn {
+    display: block !important;
+  }
+  .features-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
