@@ -26,21 +26,25 @@ function App() {
       </nav>
 
       {/* Hero Section */}
-      <header className="section" style={{ paddingTop: '180px', minHeight: '90vh', display: 'flex', alignItems: 'center', position: 'relative' }}>
+      <header style={{ paddingTop: '160px', paddingBottom: '40px', position: 'relative' }}>
         {/* Abstract BG Glows */}
         <div style={{ position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)', width: '600px', height: '600px', background: 'radial-gradient(circle, var(--accent-soft) 0%, rgba(5,5,5,0) 70%)', zIndex: -1 }}></div>
         
         <div className="container text-center animate-fade-in">
-          <div style={{ display: 'inline-block', padding: '6px 16px', backgroundColor: 'var(--surface-alt)', borderRadius: '20px', border: '1px solid var(--border-color)', marginBottom: '24px', fontSize: '14px', fontWeight: 500 }} className="text-accent">
-            ✨ Now available for Android
+          <div style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 16px', backgroundColor: 'var(--surface-alt)', borderRadius: '20px', border: '1px solid var(--border-color)', marginBottom: '24px', fontSize: '14px', fontWeight: 500 }} className="text-accent">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            Now available for Android
           </div>
           <h1 style={{ fontSize: '72px', letterSpacing: '-0.02em', marginBottom: '24px' }} className="gradient-text">
             Take Control of <br/> Your <span className="gradient-text-accent">Focus</span>
           </h1>
-          <p className="text-muted delay-1" style={{ fontSize: '20px', maxWidth: '600px', margin: '0 auto 40px auto' }}>
+          <p className="text-muted animate-fade-in delay-1" style={{ fontSize: '20px', maxWidth: '600px', margin: '0 auto 40px auto' }}>
             Break free from distractions with Lockdown Mode, connect with the community, and reclaim your digital wellbeing.
           </p>
-          <div className="delay-2" style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+          <div className="animate-fade-in delay-2" style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
             <a href="#install" className="btn btn-primary" style={{ animation: 'pulse-glow 2s infinite' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               Download APK
@@ -51,27 +55,29 @@ function App() {
           </div>
           
           {/* Mockup visual */}
-          <div className="delay-3 animate-float" style={{ marginTop: '80px', position: 'relative', marginInline: 'auto', width: '100%', maxWidth: '800px', height: '400px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', borderBottom: 'none', overflow: 'hidden', boxShadow: '0 -20px 40px rgba(0,0,0,0.5)' }}>
-             <div style={{ display: 'flex', gap: '8px', padding: '16px 24px', borderBottom: '1px solid var(--border-color)', background: 'var(--surface-alt)' }}>
-                <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: 'var(--border-color)' }}></div>
-                <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: 'var(--border-color)' }}></div>
-                <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: 'var(--border-color)' }}></div>
-             </div>
-             <div style={{ display: 'flex', height: '100%' }}>
-                {/* Mock sidebar */}
-                <div style={{ width: '25%', borderRight: '1px solid var(--border-color)', padding: '24px' }}>
-                   <div style={{ height: 20, width: '80%', background: 'var(--border-color)', borderRadius: 4, marginBottom: 24 }}></div>
-                   <div style={{ height: 12, width: '100%', background: 'var(--surface-alt)', borderRadius: 4, marginBottom: 12 }}></div>
-                   <div style={{ height: 12, width: '60%', background: 'var(--surface-alt)', borderRadius: 4, marginBottom: 12 }}></div>
-                   <div style={{ height: 12, width: '80%', background: 'var(--surface-alt)', borderRadius: 4, marginBottom: 12 }}></div>
+          <div className="animate-fade-in delay-3">
+             <div className="animate-float" style={{ marginTop: '80px', position: 'relative', marginInline: 'auto', width: '100%', maxWidth: '800px', height: '400px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', borderBottom: 'none', overflow: 'hidden', boxShadow: '0 -20px 40px rgba(0,0,0,0.5)' }}>
+                <div style={{ display: 'flex', gap: '8px', padding: '16px 24px', borderBottom: '1px solid var(--border-color)', background: 'var(--surface-alt)' }}>
+                   <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: 'var(--border-color)' }}></div>
+                   <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: 'var(--border-color)' }}></div>
+                   <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: 'var(--border-color)' }}></div>
                 </div>
-                {/* Mock content */}
-                <div style={{ flex: 1, padding: '40px' }}>
-                   <div style={{ width: 80, height: 80, borderRadius: 40, border: '4px solid var(--accent-color)', margin: '0 auto 24px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ fontSize: 24, fontWeight: 'bold' }} className="text-accent">25:00</span>
+                <div style={{ display: 'flex', height: '100%' }}>
+                   {/* Mock sidebar */}
+                   <div style={{ width: '25%', borderRight: '1px solid var(--border-color)', padding: '24px' }}>
+                      <div style={{ height: 20, width: '80%', background: 'var(--border-color)', borderRadius: 4, marginBottom: 24 }}></div>
+                      <div style={{ height: 12, width: '100%', background: 'var(--surface-alt)', borderRadius: 4, marginBottom: 12 }}></div>
+                      <div style={{ height: 12, width: '60%', background: 'var(--surface-alt)', borderRadius: 4, marginBottom: 12 }}></div>
+                      <div style={{ height: 12, width: '80%', background: 'var(--surface-alt)', borderRadius: 4, marginBottom: 12 }}></div>
                    </div>
-                   <div style={{ height: 24, width: '40%', background: 'var(--text-primary)', borderRadius: 4, margin: '0 auto 16px auto' }}></div>
-                   <div style={{ height: 16, width: '60%', background: 'var(--text-muted)', borderRadius: 4, margin: '0 auto' }}></div>
+                   {/* Mock content */}
+                   <div style={{ flex: 1, padding: '40px' }}>
+                      <div style={{ width: 80, height: 80, borderRadius: 40, border: '4px solid var(--accent-color)', margin: '0 auto 24px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <span style={{ fontSize: 24, fontWeight: 'bold' }} className="text-accent">25:00</span>
+                      </div>
+                      <div style={{ height: 24, width: '40%', background: 'var(--text-primary)', borderRadius: 4, margin: '0 auto 16px auto' }}></div>
+                      <div style={{ height: 16, width: '60%', background: 'var(--text-muted)', borderRadius: 4, margin: '0 auto' }}></div>
+                   </div>
                 </div>
              </div>
           </div>
