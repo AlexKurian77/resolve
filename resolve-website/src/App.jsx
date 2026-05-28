@@ -59,10 +59,10 @@ function App() {
             Now available for Android
           </div>
           <h1 className="gradient-text hero-title" style={{ letterSpacing: '-0.02em', marginBottom: '24px' }}>
-            Take Control of <br/> Your <span className="gradient-text-accent">Focus</span>
+            Overcome <br/> Pornography <span className="gradient-text-accent">Addiction</span>
           </h1>
           <p className="text-muted animate-fade-in delay-1 hero-subtitle" style={{ maxWidth: '600px', margin: '0 auto 40px auto' }}>
-            Break free from distractions with Lockdown Mode, connect with the community, and reclaim your digital wellbeing.
+            A compassionate mental health tool featuring a non-judgmental AI assistant and personalized assessments designed to help you break free from pornography addiction and reclaim your life.
           </p>
           <div className="animate-fade-in delay-2 hero-buttons" style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
             <a href="#install" className="btn btn-primary" style={{ animation: 'pulse-glow 2s infinite' }}>
@@ -108,36 +108,45 @@ function App() {
       <section id="features" className="section" style={{ backgroundColor: 'var(--surface-color)' }}>
         <div className="container">
           <div className="text-center animate-fade-in" style={{ marginBottom: '60px' }}>
-            <h2 style={{ fontSize: '40px', marginBottom: '16px' }}>Designed for Productivity</h2>
-            <p className="text-muted" style={{ fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>Everything you need to minimize distractions and maximize your productive hours.</p>
+            <h2 style={{ fontSize: '40px', marginBottom: '16px' }}>Your Path to Recovery</h2>
+            <p className="text-muted" style={{ fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>Evidence-based tools and compassionate support designed to help you break habits and build a healthier lifestyle.</p>
           </div>
 
           <div className="features-grid">
             {/* Feature 1 */}
             <div className="glass-card animate-fade-in delay-1">
               <div style={{ width: '48px', height: '48px', backgroundColor: 'var(--accent-soft)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }} className="text-accent">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
               </div>
-              <h3 style={{ fontSize: '24px', marginBottom: '12px' }}>Lockdown Mode</h3>
-              <p className="text-muted">Set up an unskippable countdown to lock away distracting apps. Regain focus immediately with a strict environment that keeps you accountable.</p>
+              <h3 style={{ fontSize: '24px', marginBottom: '12px' }}>Compassionate AI Assistant</h3>
+              <p className="text-muted">Chat with our non-judgmental generative AI assistant anytime. It provides personalized coping mechanisms and empathetic support right when you need it.</p>
             </div>
-            
+
             {/* Feature 2 */}
             <div className="glass-card animate-fade-in delay-2">
               <div style={{ width: '48px', height: '48px', backgroundColor: 'var(--accent-soft)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }} className="text-accent">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 14h6"></path><path d="M9 10h6"></path><path d="M9 18h6"></path></svg>
               </div>
-              <h3 style={{ fontSize: '24px', marginBottom: '12px' }}>Community</h3>
-              <p className="text-muted">Connect with like-minded individuals. Share your progress, join focus groups, and find the motivation to keep going.</p>
+              <h3 style={{ fontSize: '24px', marginBottom: '12px' }}>PDI Assessment</h3>
+              <p className="text-muted">Take our structured Pornography Dependence Inventory (PDI) to accurately evaluate your habits and generate a customized recovery plan tailored to your scores.</p>
             </div>
 
             {/* Feature 3 */}
             <div className="glass-card animate-fade-in delay-3">
               <div style={{ width: '48px', height: '48px', backgroundColor: 'var(--accent-soft)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }} className="text-accent">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
               </div>
-              <h3 style={{ fontSize: '24px', marginBottom: '12px' }}>Detailed Insights</h3>
-              <p className="text-muted">Track your focus sessions and view detailed analytics on your productivity over time directly from your profile.</p>
+              <h3 style={{ fontSize: '24px', marginBottom: '12px' }}>Lockdown Mode</h3>
+              <p className="text-muted">Set up an unskippable countdown to lock away distracting apps. Regain control immediately with a strict environment that enforces accountability.</p>
+            </div>
+            
+            {/* Feature 4 */}
+            <div className="glass-card animate-fade-in delay-4">
+              <div style={{ width: '48px', height: '48px', backgroundColor: 'var(--accent-soft)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }} className="text-accent">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </div>
+              <h3 style={{ fontSize: '24px', marginBottom: '12px' }}>Community Support</h3>
+              <p className="text-muted">You are not alone. Connect with like-minded individuals, share your milestones, and find the motivation to keep pushing forward together.</p>
             </div>
           </div>
         </div>
