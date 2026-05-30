@@ -7,20 +7,32 @@ import time
 import re # Needed for simple answer parsing
 from flask_cors import CORS
 import os
+import json
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # --- Firebase Initialization ---
 try:
-    # Use environment variable for the key path; default to local development name
-    firebase_key_path = os.getenv("FIREBASE_KEY_PATH", "firebase_key.json")
-    cred = credentials.Certificate(firebase_key_path)
-    firebase_admin.initialize_app(cred)
+    firebase_service_account_str = os.getenv("FIREBASE_SERVICE_ACCOUNT")
+    
+    if firebase_service_account_str:
+        # Stringified JSON (Vercel method)
+        service_account_info = json.loads(firebase_service_account_str)
+        cred = credentials.Certificate(service_account_info)
+    else:
+        # File path method (Local development)
+        firebase_key_path = os.getenv("FIREBASE_KEY_PATH", "firebase_key.json")
+        cred = credentials.Certificate(firebase_key_path)
+
+    # Check if already initialized (important for serverless environments like Vercel)
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(cred)
+        
     db = firestore.client()
     print("Firebase initialized successfully.")
 except Exception as e:
-    print(f"Error initializing Firebase: {e}. Ensure 'firebase_key.json' is correct.")
+    print(f"Error initializing Firebase: {e}. Ensure 'firebase_key.json' or 'FIREBASE_SERVICE_ACCOUNT' is correct.")
     db = None 
 
 def load_chatbot_knowledge():
