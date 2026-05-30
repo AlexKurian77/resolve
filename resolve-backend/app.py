@@ -78,14 +78,13 @@ If the user asks a question or brings up a topic that is outside of these bounda
 Use the provided KNOWLEDGE BASE below to answer specific questions, especially those related to 
 internal resources or common resolutions. If the answer is not in the knowledge base, 
 rely on your general helpful and supportive persona.
-"""
 
-# --- Global State for Single-User PDI Assessment ---
-PDI_STATE = {
-    'active': False,
-    'q_index': -1, # -1 means not started, 0 to 7 is active, 8 is finished (needs reset)
-    'score': 0,
-}
+MEMORY INSTRUCTION: If you learn a new, persistent fact about the user (e.g., their name, their goals, triggers, preferences), you MUST output it at the very end of your response inside a <MEMORIES>...</MEMORIES> block. Each fact should be on a new line. For example:
+<MEMORIES>
+User's name is John
+User struggles most on weekends
+</MEMORIES>
+"""
 
 
 # --- PDI Assessment Data ---
@@ -136,15 +135,15 @@ def get_pdi_analysis(score):
     if 0 <= score <= 6:
         level = "Low Dependability"
         interpretation = "Your usage appears to be controlled and is likely not causing significant issues in your life. You may be here for curiosity or to build healthier habits."
-        action = "The app can recommend foundational content on mindful internet use, goal setting, and channel-switching techniques. The approach can be less intensive."
+        action = "The app can recommend foundational content on mindful internet use, [Goal Setting](#analytics), and channel-switching techniques. The approach can be less intensive."
     elif 7 <= score <= 13:
         level = "Moderate Dependability"
         interpretation = "Your habit is becoming more established. You may be feeling a loss of control and experiencing some negative consequences. This is a crucial stage to build awareness and new coping mechanisms."
-        action = "The app should suggest a structured program, introduce CBT exercises for identifying triggers, and strongly encourage using the 'Urge Log' and 'Community' features."
+        action = "The app should suggest a structured program, introduce CBT exercises for identifying triggers, and strongly encourage using the [Urge Log](#home) and [Community](#community) features."
     elif 14 <= score <= 20:
         level = "High Dependability"
         interpretation = "Your pornography use is likely a primary coping mechanism and is having a clear, negative impact on your life. The behavior may feel compulsive and difficult to manage on your own."
-        action = "The app should immediately recommend a more intensive, structured daily plan. It should prioritize features like accountability partners, emergency 'parachute' options, and advanced content on neuroscience and recovery. It could also provide resources for finding a therapist."
+        action = "The app should immediately recommend a more intensive, structured daily plan. It should prioritize features like accountability partners, emergency [Parachute Options](#lockdown), and advanced content on neuroscience and recovery. It could also provide resources for finding a therapist."
     else: # 21-26
         level = "Severe Dependability"
         interpretation = "Your relationship with pornography is causing significant distress and disruption. The behavior is likely compulsive, and you may feel powerless to stop. Professional help is strongly recommended."
@@ -166,60 +165,15 @@ def get_pdi_analysis(score):
     return analysis_text
 
 
-def pdi_ask_next_question():
-    """Returns the text for the current/next PDI question."""
-    idx = PDI_STATE['q_index']
-    if idx >= len(PDI_QUESTIONS):
-        return None # Should not happen if logic is correct
-    
-    q_data = PDI_QUESTIONS[idx]
-    
-    q_text = f"**Section {idx // 2 + 1}: {q_data['section']}**\n"
-    q_text += f"**Question {idx + 1} of {len(PDI_QUESTIONS)}:** \"{q_data['q']}\"\n\n"
-    
-    for label, text in q_data['text']:
-        points = q_data['options'][label]
-        q_text += f"({label}) {text} ({points} points)\n"
-        
-    q_text += "\nPlease respond with the letter (A, B, C, or D) that best reflects your answer."
-    return q_text
+@app.route("/api/pdi/questions", methods=["GET"])
+def api_pdi_questions():
+    return jsonify({"questions": PDI_QUESTIONS})
 
-def pdi_process_answer(answer_text):
-    """Processes the user's answer, updates score, and increments index."""
-    idx = PDI_STATE['q_index']
-    if idx < 0 or idx >= len(PDI_QUESTIONS):
-        return None, "Error: Assessment state invalid."
-
-    # Simple parsing to get the first valid letter A, B, C, or D, case-insensitive
-    match = re.search(r'[a-d]', answer_text.upper())
-    
-    if not match:
-        # Invalid answer, ask the current question again without changing state
-        return pdi_ask_next_question(), "I didn't quite catch that. Please respond with the letter A, B, C, or D."
-
-    user_choice = match.group(0)
-    q_data = PDI_QUESTIONS[idx]
-    
-    if user_choice not in q_data['options']:
-        # This should theoretically be covered by the regex, but as a safeguard
-        return pdi_ask_next_question(), "That choice is not valid for this question. Please try again."
-
-    # Update score and state
-    points = q_data['options'][user_choice]
-    PDI_STATE['score'] += points
-    PDI_STATE['q_index'] += 1
-    
-    # Check if assessment is complete
-    if PDI_STATE['q_index'] == len(PDI_QUESTIONS):
-        PDI_STATE['active'] = False
-        final_score = PDI_STATE['score']
-        PDI_STATE['q_index'] = -1
-        PDI_STATE['score'] = 0 # Reset state for next time
-        return get_pdi_analysis(final_score), "Assessment Complete."
-    
-    # Otherwise, ask the next question
-    return pdi_ask_next_question(), "Answer Accepted."
-
+@app.route("/api/pdi/analyze", methods=["POST"])
+def api_pdi_analyze():
+    score = request.json.get("score", 0)
+    analysis = get_pdi_analysis(score)
+    return jsonify({"analysis": analysis})
 
 @app.route("/")
 def index():
@@ -229,35 +183,13 @@ def index():
 def chat():
     user_message = request.json.get("message", "").strip()
     history = request.json.get("history", [])
+    user_memories = request.json.get("memories", [])
     
     if not user_message:
         return jsonify({"response": "Please type something or select an option."})
 
-    # --- Assessment Management Flow ---
-
-    # 1. Start Assessment Command
-    if user_message == "START_PDI_ASSESSMENT":
-        PDI_STATE['active'] = True
-        PDI_STATE['q_index'] = 0
-        PDI_STATE['score'] = 0
-        
-        # Start with the first question
-        response_text = pdi_ask_next_question()
-        return jsonify({"response": response_text})
-
-    # 2. In-Progress Assessment Answer
-    if PDI_STATE['active']:
-        next_q_text, status_message = pdi_process_answer(user_message)
-        
-        if "Assessment Complete" in status_message:
-            # End of assessment, show analysis and the initial menu again
-            return jsonify({"response": next_q_text, "show_menu": True})
-        
-        if "Answer Accepted" in status_message or "Error" in status_message:
-             # Regular question progression
-            return jsonify({"response": next_q_text})
-
     # --- Main Menu Options Handled by Gemini ---
+
 
     if user_message == "FEELING_URGES":
         # Specific prompt to guide the model's response for a strong urge
@@ -283,9 +215,17 @@ def chat():
                 history_text += f"{role}: {content}\n"
         history_text += "--- END CHAT HISTORY ---\n\n"
 
-    full_prompt_context = f"{BASE_SYSTEM_PROMPT}\n\n--- KNOWLEDGE BASE START ---\n{KNOWLEDGE_BASE}\n--- KNOWLEDGE BASE END ---\n\n{history_text}"
+    memory_text = ""
+    if user_memories:
+        memory_text = "--- USER MEMORIES (FACTS YOU ALREADY KNOW) ---\n"
+        for mem in user_memories:
+            memory_text += f"- {mem}\n"
+        memory_text += "--- END USER MEMORIES ---\n\n"
+
+    full_prompt_context = f"{BASE_SYSTEM_PROMPT}\n\n{memory_text}--- KNOWLEDGE BASE START ---\n{KNOWLEDGE_BASE}\n--- KNOWLEDGE BASE END ---\n\n{history_text}"
     final_prompt = f"{full_prompt_context}{llm_prompt}"
 
+    new_memories = []
     try:
         # Simple retry logic for the API call 
         max_attempts = 3
@@ -294,6 +234,14 @@ def chat():
             try:
                 response = model.generate_content(final_prompt)
                 bot_reply = response.text if response.text else "⚠️ No response received from the AI model."
+                
+                # Extract memories
+                memory_match = re.search(r"<MEMORIES>(.*?)</MEMORIES>", bot_reply, re.DOTALL)
+                if memory_match:
+                    memory_block = memory_match.group(1).strip()
+                    new_memories = [m.strip() for m in memory_block.split('\n') if m.strip()]
+                    bot_reply = re.sub(r"<MEMORIES>.*?</MEMORIES>", "", bot_reply, flags=re.DOTALL).strip()
+                    
                 break # Success
             except Exception as e:
                 print(f"Attempt {attempt + 1} failed for LLM call: {e}")
@@ -302,7 +250,7 @@ def chat():
     except Exception as e:
         bot_reply = f"I encountered a severe error while processing your request. ({str(e)})"
 
-    return jsonify({"response": bot_reply})
+    return jsonify({"response": bot_reply, "newMemories": new_memories})
 
 
 # --- Community APIs ---

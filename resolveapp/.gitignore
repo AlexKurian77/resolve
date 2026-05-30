@@ -79,6 +79,8 @@ yarn-error.log
 *.jks
 *.keystore
 !debug.keystore
+resolve-release.keystore
+keystore.properties
 firebase_key.json
 firebase_env.js
 google-services.json

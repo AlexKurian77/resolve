@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { signIn, signUp } from '../../firebase/authService';
+import { signIn, signUp, signInWithGoogle } from '../../firebase/authService';
 import { createUserDoc } from '../../firebase/firestoreService';
 import ResolveLogo from '../../assets/images/resolve.png';
 import { signInAnonymously } from 'firebase/auth';
@@ -53,6 +53,29 @@ export default function LoginScreen({ navigation }) {
         routes: [{ name: 'MainTabs', state: { index: 0, routes: [{ name: 'Home' }] } }],
       });
     } catch (err) {
+      setMessage(err.message);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const userCred = await signInWithGoogle();
+      
+      // If it's a new user, create their document
+      if (userCred.additionalUserInfo?.isNewUser) {
+        await createUserDoc(userCred.user.uid, { displayName: userCred.user.displayName || 'Google User' });
+      } else {
+        // Just in case we want to merge updates or ensure doc exists
+        await createUserDoc(userCred.user.uid, { displayName: userCred.user.displayName || 'Google User' });
+      }
+      
+      ToastAndroid.show('Logged in with Google!', ToastAndroid.SHORT);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'MainTabs', state: { index: 0, routes: [{ name: 'Home' }] } }],
+      });
+    } catch (err) {
+      console.log('Google Sign-In Error:', err);
       setMessage(err.message);
     }
   };
@@ -216,6 +239,10 @@ export default function LoginScreen({ navigation }) {
             </View>
           </View>
         </ScrollView>
+        <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleSignIn}>
+          <MaterialCommunityIcons name="google" size={18} color={colors.bg} style={{ marginRight: 8 }} />
+          <Text style={styles.googleBtnText}>Continue with Google</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.guestBtn} onPress={handleGuestLogin}>
           <MaterialCommunityIcons name="account-outline" size={18} color={colors.textMuted} style={{ marginRight: 8 }} />
           <Text style={styles.guestBtnText}>Continue as Guest</Text>
@@ -364,6 +391,23 @@ const styles = StyleSheet.create({
   },
   guestBtnText: {
     color: colors.textMuted,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: radius.md,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: '#ffffff',
+  },
+  googleBtnText: {
+    color: colors.bg,
     fontWeight: '600',
     fontSize: 14,
   },

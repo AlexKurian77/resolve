@@ -11,14 +11,14 @@ class ApiService {
    * @param {Array} history - The chat history array.
    * @returns {Promise<Object>} - Resolves to { response: string }
    */
-  async sendChat(message, history = []) {
+  async sendChat(message, history = [], memories = []) {
     try {
       const response = await fetch(`${this.baseUrl}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message, history }),
+        body: JSON.stringify({ message, history, memories }),
       });
 
       if (!response.ok) {
@@ -32,14 +32,25 @@ class ApiService {
     }
   }
 
-  async analyzePdi(answers, score, level) {
+  async getPdiQuestions() {
     try {
-      const response = await fetch(`${this.baseUrl}/analyze_pdi`, {
+      const response = await fetch(`${this.baseUrl}/api/pdi/questions`);
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching PDI questions:', error);
+      throw error;
+    }
+  }
+
+  async analyzePdi(score) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/pdi/analyze`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ answers, score, level }),
+        body: JSON.stringify({ score }),
       });
 
       if (!response.ok) {
@@ -95,12 +106,7 @@ class ApiService {
     return this._postRequest('/api/community/chats/message', { chatId, message });
   }
 
-  /**
-   * Starts the PDI Assessment sequence.
-   */
-  async startAssessment() {
-    return this.sendChat("START_PDI_ASSESSMENT");
-  }
+
 
   /**
    * Triggers the strong urges sequence.

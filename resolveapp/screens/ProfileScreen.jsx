@@ -17,7 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../firebaseConfig';
 import { signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, spacing, radius } from '../utils/theme';
 import { AlertService } from '../utils/AlertService';
 
@@ -41,6 +42,8 @@ export default function ProfileScreen() {
     soundEffects: false,
     hapticFeedback: true,
   });
+  const [showMemories, setShowMemories] = useState(false);
+  const [userMemories, setUserMemories] = useState([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -49,7 +52,19 @@ export default function ProfileScreen() {
         if (user) {
           const userRef = doc(db, 'users', user.uid);
           const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) setUserData(userSnap.data());
+          if (userSnap.exists()) {
+            const data = userSnap.data();
+            setUserData(data);
+            if (data.memories) {
+              setUserMemories(data.memories);
+            } else {
+              const localMemories = await AsyncStorage.getItem('userMemories');
+              if (localMemories) setUserMemories(JSON.parse(localMemories));
+            }
+          }
+        } else {
+          const localMemories = await AsyncStorage.getItem('userMemories');
+          if (localMemories) setUserMemories(JSON.parse(localMemories));
         }
       } catch (e) {
         console.log(e);
@@ -78,7 +93,34 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleDeleteMemory = async (index) => {
+    AlertService.confirm(
+      'Delete Memory',
+      'Are you sure you want the AI to forget this fact?',
+      async () => {
+        try {
+          const newMemories = userMemories.filter((_, i) => i !== index);
+          setUserMemories(newMemories);
+          
+          const user = auth.currentUser;
+          if (user) {
+            const userRef = doc(db, 'users', user.uid);
+            await setDoc(userRef, { memories: newMemories }, { merge: true });
+          } else {
+            await AsyncStorage.setItem('userMemories', JSON.stringify(newMemories));
+          }
+        } catch (error) {
+          console.error('Delete memory error:', error);
+        }
+      },
+      null,
+      'Delete',
+      'Cancel'
+    );
+  };
+
   const profileOptions = [
+    { id: 6, title: 'AI Memories', description: 'Manage what the AI knows about you', icon: 'brain', color: colors.success, action: () => setShowMemories(true) },
     { id: 1, title: 'Account Settings', description: 'Manage your account details', icon: 'account-cog-outline', color: colors.accent, action: () => setShowSettings(true) },
     { id: 2, title: 'Notifications', description: 'Configure app notifications', icon: 'bell-outline', color: colors.success, action: () => setShowNotifications(true) },
     { id: 3, title: 'Privacy & Security', description: 'Manage your privacy settings', icon: 'shield-check-outline', color: colors.warning, action: () => ToastAndroid.show('Privacy settings coming soon', ToastAndroid.SHORT) },
@@ -93,8 +135,31 @@ export default function ProfileScreen() {
   const badges = userData?.badges || [];
   let joinDate = 'Recently';
   if (userData?.createdAt) {
-    if (typeof userData.createdAt === 'number') joinDate = new Date(userData.createdAt).toLocaleDateString();
-    else if (userData.createdAt?.seconds) joinDate = new Date(userData.createdAt.seconds * 1000).toLocaleDateString();
+    let dateObj;
+    if (typeof userData.createdAt === 'number') dateObj = new Date(userData.createdAt);
+    else if (userData.createdAt?.seconds) dateObj = new Date(userData.createdAt.seconds * 1000);
+    
+    if (dateObj) {
+      const diffTime = Math.abs(new Date() - dateObj);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      let relativeStr = '';
+      if (diffDays === 0) {
+        relativeStr = 'Today';
+      } else if (diffDays === 1) {
+        relativeStr = '1 day';
+      } else if (diffDays < 30) {
+        relativeStr = `${diffDays} days`;
+      } else if (diffDays < 365) {
+        const months = Math.floor(diffDays / 30);
+        relativeStr = `${months} month${months > 1 ? 's' : ''}`;
+      } else {
+        const years = Math.floor(diffDays / 365);
+        relativeStr = `${years} year${years > 1 ? 's' : ''}`;
+      }
+      
+      joinDate = `${relativeStr} (${dateObj.toLocaleDateString()})`;
+    }
   }
 
   const notificationInfo = {
@@ -184,8 +249,8 @@ export default function ProfileScreen() {
 
         {/* Notifications Modal */}
         <Modal visible={showNotifications} transparent animationType="slide" onRequestClose={() => setShowNotifications(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowNotifications(false)}>
+            <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Notifications</Text>
                 <TouchableOpacity onPress={() => setShowNotifications(false)}>
@@ -208,14 +273,14 @@ export default function ProfileScreen() {
                   </View>
                 ))}
               </ScrollView>
-            </View>
-          </View>
+            </TouchableOpacity>
+          </TouchableOpacity>
         </Modal>
 
         {/* Settings Modal */}
         <Modal visible={showSettings} transparent animationType="slide" onRequestClose={() => setShowSettings(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowSettings(false)}>
+            <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Settings</Text>
                 <TouchableOpacity onPress={() => setShowSettings(false)}>
@@ -238,8 +303,42 @@ export default function ProfileScreen() {
                   </View>
                 ))}
               </ScrollView>
-            </View>
-          </View>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+
+        {/* AI Memories Modal */}
+        <Modal visible={showMemories} transparent animationType="slide" onRequestClose={() => setShowMemories(false)}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowMemories(false)}>
+            <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>AI Memories</Text>
+                <TouchableOpacity onPress={() => setShowMemories(false)}>
+                  <MaterialCommunityIcons name="close" size={22} color={colors.textMuted} />
+                </TouchableOpacity>
+              </View>
+              <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: spacing.lg }}>
+                The AI remembers the following facts about you to personalize your experience. You can delete any memory at any time.
+              </Text>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {userMemories.length === 0 ? (
+                  <Text style={{ color: colors.textMuted, textAlign: 'center', marginTop: spacing.xxl }}>No memories saved yet.</Text>
+                ) : (
+                  userMemories.map((mem, index) => (
+                    <View key={index} style={[styles.settingRow, { alignItems: 'flex-start' }]}>
+                      <View style={{ flex: 1, marginRight: spacing.md }}>
+                        <Text style={{ color: colors.text, fontSize: 13, lineHeight: 18 }}>{mem}</Text>
+                      </View>
+                      <TouchableOpacity onPress={() => handleDeleteMemory(index)} style={{ padding: spacing.sm, backgroundColor: colors.dangerSoft, borderRadius: radius.md }}>
+                        <MaterialCommunityIcons name="trash-can-outline" size={18} color={colors.danger} />
+                      </TouchableOpacity>
+                    </View>
+                  ))
+                )}
+                <View style={{ height: 20 }} />
+              </ScrollView>
+            </TouchableOpacity>
+          </TouchableOpacity>
         </Modal>
       </View>
     </SafeAreaView>

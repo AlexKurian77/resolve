@@ -12,6 +12,7 @@ import TabNavigator from './screens/Tabs/TabNavigator';
 import ProfileScreen from './screens/ProfileScreen';
 import HomeScreen from './screens/Tabs//HomeScreen';
 import LockdownSetupScreen from './screens/Tabs/LockdownSetupScreen';
+import FullForumScreen from './screens/Tabs/FullForumScreen';
 import CustomAlert from './components/CustomAlert';
 import { setAlertRef } from './utils/AlertService';
 
@@ -52,6 +53,7 @@ export default function App() {
         <Stack.Screen name="LockdownSetup" component={LockdownSetupScreen} />
         <Stack.Screen name="Countdown" component={LockdownCountdownScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="FullForum" component={FullForumScreen} />
       </Stack.Navigator>
       <CustomAlert ref={(r) => setAlertRef(r)} />
     </NavigationContainer>

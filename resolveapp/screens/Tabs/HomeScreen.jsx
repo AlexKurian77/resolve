@@ -55,7 +55,8 @@ export default function HomeScreen({ navigation }) {
 
     updateTime();
     const now = new Date();
-    const msToNextMinute = 60000 - (now.getSeconds() * 1000 + now.getMilliseconds());
+    const msToNextMinute =
+      60000 - (now.getSeconds() * 1000 + now.getMilliseconds());
     startTimeout = setTimeout(() => {
       updateTime();
       minuteInterval = setInterval(updateTime, 60 * 1000);
@@ -69,14 +70,44 @@ export default function HomeScreen({ navigation }) {
 
   const feelingOptions = {
     positive: [
-      { id: 'good', name: 'Good', icon: 'emoticon-happy-outline', color: colors.success },
-      { id: 'neutral', name: 'Neutral', icon: 'emoticon-neutral-outline', color: colors.accent },
+      {
+        id: 'good',
+        name: 'Good',
+        icon: 'emoticon-happy-outline',
+        color: colors.success,
+      },
+      {
+        id: 'neutral',
+        name: 'Neutral',
+        icon: 'emoticon-neutral-outline',
+        color: colors.accent,
+      },
     ],
     negative: [
-      { id: 'bored', name: 'Bored', icon: 'clock-outline', color: colors.danger },
-      { id: 'stressed', name: 'Stressed', icon: 'lightning-bolt-outline', color: colors.accent },
-      { id: 'fatigued', name: 'Fatigued', icon: 'sleep', color: colors.warning },
-      { id: 'lonely', name: 'Lonely', icon: 'account-heart-outline', color: colors.success },
+      {
+        id: 'bored',
+        name: 'Bored',
+        icon: 'clock-outline',
+        color: colors.danger,
+      },
+      {
+        id: 'stressed',
+        name: 'Stressed',
+        icon: 'lightning-bolt-outline',
+        color: colors.accent,
+      },
+      {
+        id: 'fatigued',
+        name: 'Fatigued',
+        icon: 'sleep',
+        color: colors.warning,
+      },
+      {
+        id: 'lonely',
+        name: 'Lonely',
+        icon: 'account-heart-outline',
+        color: colors.success,
+      },
     ],
   };
 
@@ -101,7 +132,9 @@ export default function HomeScreen({ navigation }) {
             setBadges(data.badges || []);
 
             // Auto check-in logic
-            const last = data?.lastCheckIn?.toDate ? data.lastCheckIn.toDate() : null;
+            const last = data?.lastCheckIn?.toDate
+              ? data.lastCheckIn.toDate()
+              : null;
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
@@ -118,9 +151,15 @@ export default function HomeScreen({ navigation }) {
             }
 
             badgeMilestones.forEach(milestone => {
-              if (newStreak === milestone.days && !newBadges.includes(milestone.name)) {
+              if (
+                newStreak === milestone.days &&
+                !newBadges.includes(milestone.name)
+              ) {
                 newBadges.push(milestone.name);
-                AlertService.success('Milestone Reached', `You earned the "${milestone.name}" badge!`);
+                AlertService.success(
+                  'Milestone Reached',
+                  `You earned the "${milestone.name}" badge!`,
+                );
               }
             });
 
@@ -135,7 +174,13 @@ export default function HomeScreen({ navigation }) {
             setStreak(newStreak);
             setBestStreak(best);
             setBadges(newBadges);
-            setUserData({ ...data, currentStreak: newStreak, bestStreak: best, lastCheckIn: today, badges: newBadges });
+            setUserData({
+              ...data,
+              currentStreak: newStreak,
+              bestStreak: best,
+              lastCheckIn: today,
+              badges: newBadges,
+            });
             AlertService.success('Success', 'Check-in complete!');
           }
         }
@@ -201,7 +246,9 @@ export default function HomeScreen({ navigation }) {
             {displayName ? `Welcome back, ${displayName}` : 'Welcome'}
           </Text>
           <Text style={styles.headerSubtitle}>
-            {`${streak}-day streak · Best ${bestStreak} days`}
+            {`${streak}-day streak · Best Streak - ${bestStreak} ${
+              bestStreak == 1 ? 'day' : 'days'
+            }`}
           </Text>
         </View>
         <TouchableOpacity
@@ -217,10 +264,16 @@ export default function HomeScreen({ navigation }) {
         {/* Streak Card */}
         <View style={styles.streakCard}>
           <View style={styles.streakHeaderRow}>
-            <MaterialCommunityIcons name="fire" size={20} color={colors.accent} />
+            <MaterialCommunityIcons
+              name="fire"
+              size={20}
+              color={colors.accent}
+            />
             <Text style={styles.streakLabel}>MILESTONE STREAK</Text>
           </View>
-          <Text style={styles.streakDays}>{streak == 1 ? `${streak} Day` : `${streak} Days`}</Text>
+          <Text style={styles.streakDays}>
+            {streak == 1 ? `${streak} Day` : `${streak} Days`}
+          </Text>
 
           <View style={styles.timeCounter}>
             <View style={styles.timeItem}>
@@ -255,8 +308,12 @@ export default function HomeScreen({ navigation }) {
                 style={[
                   styles.progressFill,
                   {
-                    width: `${Math.min(100, (streak / Math.max(bestStreak, 1)) * 100)}%`,
-                    backgroundColor: streak >= bestStreak ? colors.success : colors.accent,
+                    width: `${Math.min(
+                      100,
+                      (streak / Math.max(bestStreak, 1)) * 100,
+                    )}%`,
+                    backgroundColor:
+                      streak >= bestStreak ? colors.success : colors.accent,
                   },
                 ]}
               />
@@ -269,20 +326,42 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.sectionTitle}>Track Your Progress</Text>
           <View style={styles.urgeButtons}>
             <TouchableOpacity
-              style={[styles.urgeButton, { backgroundColor: colors.successSoft }]}
-              onPress={() => { setSelectedUrgeOutcome('resisted'); setShowUrgeModal(true); }}
+              style={[
+                styles.urgeButton,
+                { backgroundColor: colors.successSoft },
+              ]}
+              onPress={() => {
+                setSelectedUrgeOutcome('resisted');
+                setShowUrgeModal(true);
+              }}
             >
-              <MaterialCommunityIcons name="shield-check-outline" size={32} color={colors.success} />
+              <MaterialCommunityIcons
+                name="shield-check-outline"
+                size={32}
+                color={colors.success}
+              />
               <Text style={styles.urgeButtonText}>URGE RESISTED</Text>
               <Text style={styles.urgeButtonSubText}>You stayed strong!</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.urgeButton, { backgroundColor: colors.dangerSoft }]}
-              onPress={() => { setSelectedUrgeOutcome('relapsed'); setShowUrgeModal(true); }}
+              style={[
+                styles.urgeButton,
+                { backgroundColor: colors.dangerSoft },
+              ]}
+              onPress={() => {
+                setSelectedUrgeOutcome('relapsed');
+                setShowUrgeModal(true);
+              }}
             >
-              <MaterialCommunityIcons name="refresh" size={32} color={colors.danger} />
+              <MaterialCommunityIcons
+                name="refresh"
+                size={32}
+                color={colors.danger}
+              />
               <Text style={styles.urgeButtonText}>RELAPSED</Text>
-              <Text style={styles.urgeButtonSubText}>It's okay, keep going</Text>
+              <Text style={styles.urgeButtonSubText}>
+                It's okay, keep going
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -292,8 +371,14 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.rewardsHeader}>
             <Text style={styles.sectionTitle}>Rewards</Text>
             <View style={styles.rewardsPoints}>
-              <MaterialCommunityIcons name="star-four-points" size={14} color={colors.warning} />
-              <Text style={styles.rewardsPointsText}>{rewardPoints} points</Text>
+              <MaterialCommunityIcons
+                name="star-four-points"
+                size={14}
+                color={colors.warning}
+              />
+              <Text style={styles.rewardsPointsText}>
+                {rewardPoints} points
+              </Text>
             </View>
           </View>
           <Text style={styles.rewardsSubTitle}>Progress to next reward</Text>
@@ -301,12 +386,16 @@ export default function HomeScreen({ navigation }) {
             <View
               style={[
                 styles.progressFill,
-                { width: `${(rewardPoints % 200) / 2}%`, backgroundColor: colors.accent },
+                {
+                  width: `${(rewardPoints % 200) / 2}%`,
+                  backgroundColor: colors.accent,
+                },
               ]}
             />
           </View>
           <Text style={styles.rewardsSubText}>
-            {200 - (rewardPoints % 200)} more points to unlock premium meditation
+            {200 - (rewardPoints % 200)} more points to unlock premium
+            meditation
           </Text>
           <View style={styles.badgesContainer}>
             {badges.length > 0 ? (
@@ -314,7 +403,13 @@ export default function HomeScreen({ navigation }) {
                 <View key={idx} style={styles.badgeItem}>
                   <View style={styles.badgeIcon}>
                     <MaterialCommunityIcons
-                      name={idx === 0 ? 'trophy-outline' : idx === 1 ? 'medal-outline' : 'star-circle-outline'}
+                      name={
+                        idx === 0
+                          ? 'trophy-outline'
+                          : idx === 1
+                          ? 'medal-outline'
+                          : 'star-circle-outline'
+                      }
                       size={22}
                       color={colors.warning}
                     />
@@ -323,7 +418,9 @@ export default function HomeScreen({ navigation }) {
                 </View>
               ))
             ) : (
-              <Text style={styles.badgeEmptyText}>Complete challenges to earn badges</Text>
+              <Text style={styles.badgeEmptyText}>
+                Complete challenges to earn badges
+              </Text>
             )}
           </View>
         </View>
@@ -338,16 +435,30 @@ export default function HomeScreen({ navigation }) {
         animationType="fade"
         onRequestClose={() => setShowUrgeModal(false)}
       >
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowUrgeModal(false)}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowUrgeModal(false)}
+        >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <MaterialCommunityIcons
-                name={selectedUrgeOutcome === 'resisted' ? 'shield-check-outline' : 'refresh'}
+                name={
+                  selectedUrgeOutcome === 'resisted'
+                    ? 'shield-check-outline'
+                    : 'refresh'
+                }
                 size={36}
-                color={selectedUrgeOutcome === 'resisted' ? colors.success : colors.danger}
+                color={
+                  selectedUrgeOutcome === 'resisted'
+                    ? colors.success
+                    : colors.danger
+                }
               />
               <Text style={styles.modalTitle}>
-                {selectedUrgeOutcome === 'resisted' ? 'URGE RESISTED' : 'RELAPSED'}
+                {selectedUrgeOutcome === 'resisted'
+                  ? 'URGE RESISTED'
+                  : 'RELAPSED'}
               </Text>
               <Text style={styles.modalSubText}>How were you feeling?</Text>
             </View>
@@ -357,10 +468,17 @@ export default function HomeScreen({ navigation }) {
               {feelingOptions.positive.map(feeling => (
                 <TouchableOpacity
                   key={feeling.id}
-                  style={[styles.feelingButton, { backgroundColor: feeling.color + '1A' }]}
+                  style={[
+                    styles.feelingButton,
+                    { backgroundColor: feeling.color + '1A' },
+                  ]}
                   onPress={() => handleUrgeRecord(selectedUrgeOutcome, feeling)}
                 >
-                  <MaterialCommunityIcons name={feeling.icon} size={22} color={feeling.color} />
+                  <MaterialCommunityIcons
+                    name={feeling.icon}
+                    size={22}
+                    color={feeling.color}
+                  />
                   <Text style={styles.feelingButtonText}>{feeling.name}</Text>
                 </TouchableOpacity>
               ))}
@@ -371,10 +489,17 @@ export default function HomeScreen({ navigation }) {
               {feelingOptions.negative.map(feeling => (
                 <TouchableOpacity
                   key={feeling.id}
-                  style={[styles.feelingButtonNegative, { backgroundColor: feeling.color + '1A' }]}
+                  style={[
+                    styles.feelingButtonNegative,
+                    { backgroundColor: feeling.color + '1A' },
+                  ]}
                   onPress={() => handleUrgeRecord(selectedUrgeOutcome, feeling)}
                 >
-                  <MaterialCommunityIcons name={feeling.icon} size={22} color={feeling.color} />
+                  <MaterialCommunityIcons
+                    name={feeling.icon}
+                    size={22}
+                    color={feeling.color}
+                  />
                   <Text style={styles.feelingButtonText}>{feeling.name}</Text>
                 </TouchableOpacity>
               ))}
@@ -382,7 +507,10 @@ export default function HomeScreen({ navigation }) {
 
             <TouchableOpacity
               style={styles.cancelButton}
-              onPress={() => { setShowUrgeModal(false); setSelectedUrgeOutcome(null); }}
+              onPress={() => {
+                setShowUrgeModal(false);
+                setSelectedUrgeOutcome(null);
+              }}
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>

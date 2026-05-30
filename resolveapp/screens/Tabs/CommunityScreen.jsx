@@ -23,6 +23,22 @@ import { auth, db } from '../../firebaseConfig';
 import { colors, spacing, radius } from '../../utils/theme';
 import { apiService } from '../../utils/apiService';
 
+const formatTime = (timestamp) => {
+  if (!timestamp) return 'Just now';
+  
+  // Handle both Firestore timestamps and normal Date/number timestamps
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  const seconds = Math.floor((new Date() - date) / 1000);
+  
+  if (seconds < 60) return 'Just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+};
+
 export default function CommunityScreen({ navigation }) {
   const [threads, setThreads] = useState([
     {
@@ -148,6 +164,7 @@ export default function CommunityScreen({ navigation }) {
         upvotedBy: [],
         replies: [],
         userId: user.uid,
+        createdAt: Date.now(),
       };
       
       // Optimistic UI update
@@ -335,7 +352,14 @@ export default function CommunityScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {activeThread?.posts.map(p => (
+          {[...(activeThread?.posts || [])]
+            .sort((a, b) => {
+              const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : (a.createdAt || 0);
+              const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : (b.createdAt || 0);
+              return timeB - timeA;
+            })
+            .slice(0, 5)
+            .map(p => (
             <View key={p.id} style={styles.postCard}>
               <View style={styles.postHeader}>
                 <MaterialCommunityIcons
@@ -345,7 +369,7 @@ export default function CommunityScreen({ navigation }) {
                 />
                 <View style={styles.postMeta}>
                   <Text style={styles.postAuthor}>Anonymous User</Text>
-                  <Text style={styles.postTime}>Just now</Text>
+                  <Text style={styles.postTime}>{formatTime(p.createdAt)}</Text>
                 </View>
               </View>
               <Text style={styles.postText}>{p.text}</Text>
@@ -408,6 +432,16 @@ export default function CommunityScreen({ navigation }) {
               </View>
             </View>
           ))}
+
+          {activeThread?.posts?.length > 5 && (
+            <TouchableOpacity 
+              style={styles.viewAllButton} 
+              onPress={() => navigation.navigate('FullForum', { threadId: activeThreadId, threadTitle: activeThread.title })}
+            >
+              <Text style={styles.viewAllText}>View All Posts</Text>
+              <MaterialCommunityIcons name="chevron-right" size={16} color={colors.accent} />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* AI Group Therapy */}
@@ -677,6 +711,21 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
   },
   replyButtonText: { color: colors.text, fontSize: 11, fontWeight: '600' },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.xl,
+    marginTop: spacing.md,
+    gap: spacing.xs,
+  },
+  viewAllText: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: '600',
+  },
   therapySectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
