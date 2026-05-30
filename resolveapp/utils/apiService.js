@@ -2,7 +2,7 @@ import { API_URL } from '@env';
 
 class ApiService {
   constructor() {
-    this.baseUrl = API_URL;
+    this.baseUrl = API_URL || 'https://apiresolve.vercel.app';
   }
 
   /**
