@@ -79,11 +79,12 @@ Use the provided KNOWLEDGE BASE below to answer specific questions, especially t
 internal resources or common resolutions. If the answer is not in the knowledge base, 
 rely on your general helpful and supportive persona.
 
-MEMORY INSTRUCTION: If you learn a new, persistent fact about the user (e.g., their name, their goals, triggers, preferences), you MUST output it at the very end of your response inside a <MEMORIES>...</MEMORIES> block. Each fact should be on a new line. For example:
-<MEMORIES>
-User's name is John
-User struggles most on weekends
-</MEMORIES>
+MEMORY INSTRUCTION: If you learn a new, persistent fact about the user (e.g., their name, their goals, triggers, preferences), you MUST output it at the very end of your response inside an <ADD_MEMORY>...</ADD_MEMORY> tag. 
+If the user tells you a fact that CONTRADICTS an old memory in the "USER MEMORIES" list, you MUST output a <DELETE_MEMORY>...</DELETE_MEMORY> tag containing the EXACT string of the old memory to remove it, alongside the new <ADD_MEMORY> tag.
+For example:
+<DELETE_MEMORY>User's name is John</DELETE_MEMORY>
+<ADD_MEMORY>User's name is Alex</ADD_MEMORY>
+<ADD_MEMORY>User struggles most on weekends</ADD_MEMORY>
 """
 
 
@@ -225,7 +226,8 @@ def chat():
     full_prompt_context = f"{BASE_SYSTEM_PROMPT}\n\n{memory_text}--- KNOWLEDGE BASE START ---\n{KNOWLEDGE_BASE}\n--- KNOWLEDGE BASE END ---\n\n{history_text}"
     final_prompt = f"{full_prompt_context}{llm_prompt}"
 
-    new_memories = []
+    add_memories = []
+    delete_memories = []
     try:
         # Simple retry logic for the API call 
         max_attempts = 3
@@ -236,12 +238,15 @@ def chat():
                 bot_reply = response.text if response.text else "⚠️ No response received from the AI model."
                 
                 # Extract memories
-                memory_match = re.search(r"<MEMORIES>(.*?)</MEMORIES>", bot_reply, re.DOTALL)
-                if memory_match:
-                    memory_block = memory_match.group(1).strip()
-                    new_memories = [m.strip() for m in memory_block.split('\n') if m.strip()]
-                    bot_reply = re.sub(r"<MEMORIES>.*?</MEMORIES>", "", bot_reply, flags=re.DOTALL).strip()
-                    
+                add_matches = re.findall(r"<ADD_MEMORY>(.*?)</ADD_MEMORY>", bot_reply, re.IGNORECASE | re.DOTALL)
+                add_memories = [m.strip() for m in add_matches if m.strip()]
+                bot_reply = re.sub(r"<ADD_MEMORY>.*?</ADD_MEMORY>", "", bot_reply, flags=re.IGNORECASE | re.DOTALL)
+                
+                delete_matches = re.findall(r"<DELETE_MEMORY>(.*?)</DELETE_MEMORY>", bot_reply, re.IGNORECASE | re.DOTALL)
+                delete_memories = [m.strip() for m in delete_matches if m.strip()]
+                bot_reply = re.sub(r"<DELETE_MEMORY>.*?</DELETE_MEMORY>", "", bot_reply, flags=re.IGNORECASE | re.DOTALL)
+                
+                bot_reply = bot_reply.strip()
                 break # Success
             except Exception as e:
                 print(f"Attempt {attempt + 1} failed for LLM call: {e}")
@@ -250,7 +255,7 @@ def chat():
     except Exception as e:
         bot_reply = f"I encountered a severe error while processing your request. ({str(e)})"
 
-    return jsonify({"response": bot_reply, "newMemories": new_memories})
+    return jsonify({"response": bot_reply, "addMemories": add_memories, "deleteMemories": delete_memories})
 
 
 # --- Community APIs ---

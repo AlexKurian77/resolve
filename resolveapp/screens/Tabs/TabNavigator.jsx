@@ -192,8 +192,24 @@ export default function TabNavigator() {
     try {
       const data = await apiService.sendChat(userMessage.text, history, userMemories);
       
-      if (data.newMemories && data.newMemories.length > 0) {
-        const updatedMemories = [...userMemories, ...data.newMemories];
+      let updatedMemories = [...userMemories];
+      let hasChanges = false;
+
+      if (data.deleteMemories && data.deleteMemories.length > 0) {
+        data.deleteMemories.forEach(delMem => {
+          updatedMemories = updatedMemories.filter(
+            m => m.trim().toLowerCase() !== delMem.trim().toLowerCase()
+          );
+        });
+        hasChanges = true;
+      }
+
+      if (data.addMemories && data.addMemories.length > 0) {
+        updatedMemories = [...new Set([...updatedMemories, ...data.addMemories])];
+        hasChanges = true;
+      }
+
+      if (hasChanges) {
         saveMemories(updatedMemories);
       }
 

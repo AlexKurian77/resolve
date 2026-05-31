@@ -39,18 +39,24 @@ export default function HomeScreen({ navigation }) {
 
   const [hoursSinceMidnight, setHoursSinceMidnight] = useState(0);
   const [minutesSinceMidnight, setMinutesSinceMidnight] = useState(0);
+  const [streakStartDate, setStreakStartDate] = useState(null);
 
   useEffect(() => {
     let minuteInterval = null;
     let startTimeout = null;
 
     const updateTime = () => {
+      if (!streakStartDate) return;
       const now = new Date();
-      const midnight = new Date();
-      midnight.setHours(0, 0, 0, 0);
-      const diffMs = now - midnight;
-      setHoursSinceMidnight(Math.floor(diffMs / (1000 * 60 * 60)));
-      setMinutesSinceMidnight(Math.floor((diffMs / (1000 * 60)) % 60));
+      const diffMs = Math.max(0, now.getTime() - streakStartDate.getTime());
+      
+      const exactDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const hoursLeft = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+      const minutesLeft = Math.floor((diffMs / (1000 * 60)) % 60);
+
+      setStreak(exactDays);
+      setHoursSinceMidnight(hoursLeft);
+      setMinutesSinceMidnight(minutesLeft);
     };
 
     updateTime();
@@ -66,7 +72,7 @@ export default function HomeScreen({ navigation }) {
       if (startTimeout) clearTimeout(startTimeout);
       if (minuteInterval) clearInterval(minuteInterval);
     };
-  }, []);
+  }, [streakStartDate]);
 
   const feelingOptions = {
     positive: [
@@ -131,28 +137,29 @@ export default function HomeScreen({ navigation }) {
             setBestStreak(data.bestStreak || 0);
             setBadges(data.badges || []);
 
-            // Auto check-in logic
-            const last = data?.lastCheckIn?.toDate
-              ? data.lastCheckIn.toDate()
-              : null;
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            let newStreak = 1;
-            let newBadges = [...(data.badges || [])];
-
-            if (last) {
-              const yesterday = new Date(today);
-              yesterday.setDate(yesterday.getDate() - 1);
-              if (last.toDateString() === today.toDateString()) return;
-              else if (last.toDateString() === yesterday.toDateString()) {
-                newStreak = (data.currentStreak || 0) + 1;
+            // Determine the start date for the streak
+            let startDate = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+            if (data.urges && data.urges.length > 0) {
+              const relapses = data.urges.filter(u => u.outcome === 'relapsed');
+              if (relapses.length > 0) {
+                relapses.sort((a, b) => b.timestamp - a.timestamp);
+                startDate = new Date(relapses[0].timestamp);
               }
             }
 
+            setStreakStartDate(startDate);
+
+            const diffTime = Date.now() - startDate.getTime();
+            let calculatedStreak = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+
+            let newBadges = [...(data.badges || [])];
+
             badgeMilestones.forEach(milestone => {
               if (
-                newStreak === milestone.days &&
+                calculatedStreak >= milestone.days &&
                 !newBadges.includes(milestone.name)
               ) {
                 newBadges.push(milestone.name);
@@ -163,25 +170,47 @@ export default function HomeScreen({ navigation }) {
               }
             });
 
-            const best = Math.max(newStreak, data.bestStreak || 0);
-            await updateDoc(userRef, {
-              currentStreak: newStreak,
-              bestStreak: best,
-              lastCheckIn: Timestamp.fromDate(today),
-              badges: newBadges,
-            });
+            const best = Math.max(calculatedStreak, data.bestStreak || 0);
 
-            setStreak(newStreak);
+            // Check if we need to update the database
+            const last = data?.lastCheckIn?.toDate ? data.lastCheckIn.toDate() : null;
+            let needsUpdate = false;
+            let checkInComplete = false;
+
+            if (!last || last.toDateString() !== today.toDateString()) {
+              needsUpdate = true;
+              checkInComplete = true;
+            }
+            if (
+              calculatedStreak !== data.currentStreak ||
+              best !== data.bestStreak ||
+              newBadges.length !== (data.badges || []).length
+            ) {
+              needsUpdate = true;
+            }
+
+            if (needsUpdate) {
+              await updateDoc(userRef, {
+                currentStreak: calculatedStreak,
+                bestStreak: best,
+                lastCheckIn: Timestamp.fromDate(today),
+                badges: newBadges,
+              });
+              if (checkInComplete) {
+                AlertService.success('Success', 'Check-in complete!');
+              }
+            }
+
+            setStreak(calculatedStreak);
             setBestStreak(best);
             setBadges(newBadges);
             setUserData({
               ...data,
-              currentStreak: newStreak,
+              currentStreak: calculatedStreak,
               bestStreak: best,
               lastCheckIn: today,
               badges: newBadges,
             });
-            AlertService.success('Success', 'Check-in complete!');
           }
         }
       } catch (e) {
@@ -199,15 +228,34 @@ export default function HomeScreen({ navigation }) {
       const user = auth.currentUser;
       if (!user) return;
       const userRef = doc(db, 'users', user.uid);
+      const now = new Date();
       const urgeEntry = {
         outcome,
         feeling: feeling.id,
         feelingName: feeling.name,
-        date: new Date().toISOString(),
+        date: now.toISOString(),
         timestamp: Date.now(),
-        hour: new Date().getHours(),
+        hour: now.getHours(),
       };
-      await updateDoc(userRef, { urges: arrayUnion(urgeEntry) });
+      
+      const updateData = { urges: arrayUnion(urgeEntry) };
+      
+      if (outcome === 'relapsed') {
+        updateData.currentStreak = 0;
+        setStreak(0);
+        setStreakStartDate(now);
+      }
+      
+      await updateDoc(userRef, updateData);
+      
+      if (userData) {
+        setUserData(prev => ({
+          ...prev,
+          urges: [...(prev.urges || []), urgeEntry],
+          currentStreak: outcome === 'relapsed' ? 0 : prev.currentStreak
+        }));
+      }
+
       setShowUrgeModal(false);
       setSelectedUrgeOutcome(null);
       AlertService.success('Recorded', `Urge ${outcome}: ${feeling.name}`);
