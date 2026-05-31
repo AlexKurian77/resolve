@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -47,6 +47,15 @@ export default function TabNavigator() {
   const [pdiIndex, setPdiIndex] = useState(0);
   const [pdiScore, setPdiScore] = useState(0);
   const [showPdiButton, setShowPdiButton] = useState(true);
+
+  const scrollViewRef = useRef(null);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+
+  const handleScroll = (event) => {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 100;
+    setShowScrollToBottom(!isCloseToBottom);
+  };
 
   useEffect(() => {
     loadMemories();
@@ -456,8 +465,16 @@ export default function TabNavigator() {
 
               {/* Chat Messages */}
               <ScrollView
+                ref={scrollViewRef}
                 style={styles.chatMessages}
                 showsVerticalScrollIndicator={false}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
+                onContentSizeChange={() => {
+                  if (!showScrollToBottom) {
+                    scrollViewRef.current?.scrollToEnd({ animated: true });
+                  }
+                }}
               >
                 {chatMessages.map(message => (
                   <View
@@ -543,6 +560,29 @@ export default function TabNavigator() {
                 ))}
                 <View style={{ marginBottom: 15 }}></View>
               </ScrollView>
+
+              {showScrollToBottom && (
+                <TouchableOpacity
+                  style={{
+                    position: 'absolute',
+                    bottom: 80,
+                    right: 20,
+                    backgroundColor: colors.surface,
+                    borderRadius: 20,
+                    width: 40,
+                    height: 40,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    elevation: 5,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    zIndex: 10,
+                  }}
+                  onPress={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+                >
+                  <MaterialCommunityIcons name="chevron-down" size={24} color={colors.accent} />
+                </TouchableOpacity>
+              )}
 
               {!pdiActive && showPdiButton && (
                 <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.sm }}>
